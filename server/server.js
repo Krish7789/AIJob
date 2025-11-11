@@ -5,7 +5,16 @@ import axios from "axios";
 
 dotenv.config();
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://getjobji.vercel.app", // deployed frontend
+      "http://localhost:5173",       // local dev frontend
+    ],
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 const PORT = 5000;
