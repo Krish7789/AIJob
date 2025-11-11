@@ -23,7 +23,14 @@ interface IndexProps {
 }
 
 // ✅ Single Team Member
-const teamMembers = [{ name: "Krish Kumar", role: "Software Developer" }];
+const teamMembers = [
+  { name: "Krish Kumar", role: "Backend Developer" },
+  { name: "Pratyakshi Chauhan", role: "DevOps Engineer" },
+  { name: "Vansh Thapa", role: "Data Engineer" },
+  { name: "Karan Sharma", role: "AI/ML Engineer" },
+  { name: "Krrish Khurana", role: "Database Handler" },
+  { name: "Tanish Sharma", role: "Frontend Developer" },
+];
 
 const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) => {
 
@@ -150,49 +157,53 @@ const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) 
         </div>
       )}
 
-      {/* About Us Section */}
-      <div ref={aboutRef} className="container mx-auto px-4 py-20">
-        <div className="relative max-w-4xl mx-auto bg-white/95 shadow-2xl rounded-3xl p-12 backdrop-blur-lg border border-gray-200">
-          <h2 className="text-5xl font-extrabold text-center mb-6 text-secondary-glow tracking-tight">
-            About Us
-          </h2>
-          <p className="text-lg md:text-xl text-center max-w-2xl mx-auto mb-10 text-gray-800 font-medium leading-relaxed">
-            We are the team behind{" "}
-            <span className="font-bold text-primary">
-              AI-POWERED Career Guidance System
-            </span>{" "}
-            — an intelligent platform helping students find their ideal
-            internship based on their skills, education, and interests. Our
-            mission is to simplify career guidance with innovative AI technology
-            and a seamless, user-friendly experience.
-          </p>
+      {/* 🌟 About Us Section */}
+<div ref={aboutRef} className="container mx-auto px-4 py-20">
+  <div className="relative max-w-5xl mx-auto bg-white/95 shadow-2xl rounded-3xl p-12 backdrop-blur-lg border border-gray-200">
+    <h2 className="text-5xl font-extrabold text-center mb-6 text-secondary-glow tracking-tight">
+      About Us
+    </h2>
 
-          {/* ✅ Single centered team member */}
-          <div className="flex justify-center">
-            {teamMembers.map((member, idx) => (
-              <div
-                key={idx}
-                className="bg-gradient-to-br from-primary/10 to-secondary/10 backdrop-blur-md p-10 rounded-2xl text-center border border-primary/20 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 flex flex-col items-center w-80"
-              >
-                <div className="mb-4 flex items-center justify-center">
-                  <span className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-secondary-glow text-white text-3xl font-bold shadow">
-                    {member.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </span>
-                </div>
-                <div className="text-xl font-semibold text-secondary-glow mb-1 tracking-wide">
-                  {member.name}
-                </div>
-                <div className="text-sm text-gray-600 font-medium">
-                  {member.role}
-                </div>
-              </div>
-            ))}
+    <p className="text-lg md:text-xl text-center max-w-3xl mx-auto mb-12 text-gray-800 font-medium leading-relaxed">
+      We are the team behind{" "}
+      <span className="font-bold text-primary">
+        AI-Powered Internship Recommendation System
+      </span>
+      — an intelligent platform helping students find their ideal internships
+      based on skills, education, and interests. Our mission is to simplify
+      career guidance through innovative AI and seamless user experiences.
+    </p>
+
+    {/* 👥 Team Members Grid */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+      {teamMembers.map((member, idx) => (
+        <div
+          key={idx}
+          className="bg-gradient-to-br from-primary/10 to-secondary/10 backdrop-blur-md p-8 rounded-2xl text-center border border-primary/20 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col items-center w-72"
+        >
+          {/* Avatar */}
+          <div className="mb-4 flex items-center justify-center">
+            <span className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-secondary-glow text-white text-2xl font-bold shadow">
+              {member.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
+            </span>
+          </div>
+
+          {/* Name & Role */}
+          <div className="text-xl font-semibold text-secondary-glow mb-1 tracking-wide">
+            {member.name}
+          </div>
+          <div className="text-sm text-gray-600 font-medium">
+            {member.role}
           </div>
         </div>
-      </div>
+      ))}
+    </div>
+  </div>
+</div>
+
     </div>
   );
 };
