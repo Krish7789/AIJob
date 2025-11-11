@@ -4,18 +4,22 @@ import { auth } from "../firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "../assets/logo.png"; // ✅ Make sure this path is correct
+import logo from "../assets/logo.png";
 
 interface NavbarProps {
   onHomeClick?: () => void;
   onInternshipsClick?: () => void;
   onAboutClick?: () => void;
+  canInstall?: boolean; // ✅ For install button visibility
+  onInstallClick?: () => void; // ✅ For triggering PWA install
 }
 
 export default function Navbar({
   onHomeClick,
   onInternshipsClick,
   onAboutClick,
+  canInstall,
+  onInstallClick,
 }: NavbarProps) {
   const [user, setUser] = useState<any>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -76,16 +80,10 @@ export default function Navbar({
 
       {/* ✅ Navigation Links */}
       <div className="hidden md:flex gap-8 text-gray-200 font-medium">
-        <button
-          onClick={onHomeClick}
-          className="hover:text-cyan-400 transition"
-        >
+        <button onClick={onHomeClick} className="hover:text-cyan-400 transition">
           Home
         </button>
-        <button
-          onClick={onAboutClick}
-          className="hover:text-cyan-400 transition"
-        >
+        <button onClick={onAboutClick} className="hover:text-cyan-400 transition">
           About
         </button>
         <button
@@ -99,25 +97,32 @@ export default function Navbar({
         </Link>
       </div>
 
-      {/* ✅ Right Section (User or Sign In) */}
-      <div ref={dropdownRef} className="relative">
+      {/* ✅ Right Section */}
+      <div ref={dropdownRef} className="relative flex items-center gap-3">
+        {/* ✅ Optional Install Button */}
+        {canInstall && (
+          <button
+            onClick={onInstallClick}
+            className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform"
+          >
+            Install App
+          </button>
+        )}
+
         {user ? (
           <>
-{/* ✅ Always show alphabet avatar (no photo) */}
-<div
-  onClick={() => setDropdownOpen((prev) => !prev)}
-  className="cursor-pointer w-10 h-10 flex items-center justify-center text-lg font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-md hover:scale-105 transition-transform"
-  title={user.displayName || user.email}
->
-  {(user.displayName?.charAt(0) ||
-    user.email?.charAt(0) ||
-    "?"
-  ).toUpperCase()}
-</div>
+            <div
+              onClick={() => setDropdownOpen((prev) => !prev)}
+              className="cursor-pointer w-10 h-10 flex items-center justify-center text-lg font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-md hover:scale-105 transition-transform"
+              title={user.displayName || user.email}
+            >
+              {(user.displayName?.charAt(0) ||
+                user.email?.charAt(0) ||
+                "?"
+              ).toUpperCase()}
+            </div>
 
-
-
-            {/* ✅ Dropdown Menu */}
+            {/* Dropdown */}
             <AnimatePresence>
               {dropdownOpen && (
                 <motion.div
@@ -157,7 +162,6 @@ export default function Navbar({
             </AnimatePresence>
           </>
         ) : (
-          // ✅ Sign In Button
           <Link
             to="/signin"
             className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold py-2 px-5 rounded-full shadow-md hover:scale-105 transition-transform"

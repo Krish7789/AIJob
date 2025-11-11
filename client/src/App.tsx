@@ -8,14 +8,43 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
 import SignIn from "./pages/SignIn";
-import Dashboard from "./pages/Dashboard"; // ✅ new dashboard page
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
+// ✅ Hook to detect PWA install prompt
+const usePWAInstallPrompt = () => {
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [canInstall, setCanInstall] = useState(false);
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    setDeferredPrompt(e);
+    setCanInstall(true);
+  });
+
+  const promptInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
+      setCanInstall(false);
+      return choice;
+    }
+  };
+
+  return { canInstall, promptInstall };
+};
+
 const App = () => {
-  const [scrollToProfile, setScrollToProfile] = useState<(() => void) | null>(null);
+  const [scrollToProfile, setScrollToProfile] = useState<(() => void) | null>(
+    null
+  );
   const [scrollToAbout, setScrollToAbout] = useState<(() => void) | null>(null);
   const [goHome, setGoHome] = useState<(() => void) | null>(null);
+
+  // ✅ Enable install prompt in Navbar
+  const { canInstall, promptInstall } = usePWAInstallPrompt();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -27,6 +56,8 @@ const App = () => {
             onHomeClick={() => goHome?.()}
             onInternshipsClick={() => scrollToProfile?.()}
             onAboutClick={() => scrollToAbout?.()}
+            canInstall={canInstall}
+            onInstallClick={promptInstall}
           />
 
           <Routes>
@@ -41,7 +72,7 @@ const App = () => {
               }
             />
             <Route path="/signin" element={<SignIn />} />
-            <Route path="/dashboard" element={<Dashboard />} /> {/* ✅ New route */}
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
