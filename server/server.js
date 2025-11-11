@@ -12,44 +12,159 @@ const PORT = 5000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const MODEL = "gemini-2.5-flash";
 
-// ✅ POST endpoint for internship recommendations
+/* ======================================================
+   🔹 UTILITY: Fetch LeetCode Stats via GraphQL
+   ====================================================== */
+async function fetchLeetCodeStats(username) {
+  const query = `
+    query getUserProfile($username: String!) {
+      matchedUser(username: $username) {
+        username
+        profile {
+          ranking
+          reputation
+        }
+        submitStatsGlobal {
+          acSubmissionNum {
+            difficulty
+            count
+          }
+        }
+      }
+    }`;
+
+  try {
+    const response = await axios.post(
+      "https://leetcode.com/graphql",
+      { query, variables: { username } },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    const user = response.data?.data?.matchedUser;
+    if (!user) return null;
+
+    return {
+      username: user.username,
+      ranking: user.profile?.ranking ?? "N/A",
+      reputation: user.profile?.reputation ?? "N/A",
+      problemsSolved: (user.submitStatsGlobal?.acSubmissionNum || []).map((x) => ({
+        difficulty: x.difficulty,
+        count: x.count,
+      })),
+    };
+  } catch (err) {
+    console.error("⚠️ LeetCode data fetch failed:", err.message);
+    return null;
+  }
+}
+
+/* ======================================================
+   🔹 GET: Fetch LeetCode Stats (for 'Fetch Stats' button)
+   ====================================================== */
+app.get("/api/leetcode", async (req, res) => {
+  const username = req.query.username;
+
+  if (!username) {
+    return res.status(400).json({ error: "Username is required" });
+  }
+
+  console.log(`📡 Fetching LeetCode data for ${username}...`);
+
+  const stats = await fetchLeetCodeStats(username);
+  if (!stats) {
+    return res.status(404).json({ error: "LeetCode user not found or failed to fetch." });
+  }
+
+  console.log("✅ LeetCode stats fetched successfully:", stats);
+  res.json(stats);
+});
+
+/* ======================================================
+   🔹 POST: Internship Recommendations (AI + LeetCode)
+   ====================================================== */
 app.post("/api/internships", async (req, res) => {
   try {
     console.log("✅ Request received at /api/internships");
     console.log("📝 Request body:", JSON.stringify(req.body, null, 2));
 
-    // 🧠 Construct dynamic AI prompt
-    const prompt = `
-You are an AI career advisor. 
-Given the following user profile:
-Education: ${req.body.education}
-Skills: ${req.body.skills}
-Interests: ${req.body.interests}
-Preferred Location: ${req.body.location}
+    let { education, skills, interests, location, leetcodeUsername } = req.body;
 
-Recommend the top 6 internship opportunities as a JSON array.
-Each internship must include:
-id, title, company, location, type, duration, description, requiredSkills, matchScore (0–100), and a valid "link" (a realistic company/career site URL).
+    // 🟩 Optional: Fetch verified LeetCode stats if provided
+    let leetcodeData = null;
+    if (leetcodeUsername) {
+      console.log(`📡 Fetching LeetCode data for ${leetcodeUsername}...`);
+      leetcodeData = await fetchLeetCodeStats(leetcodeUsername);
+      if (leetcodeData) {
+        console.log("✅ LeetCode data fetched:", leetcodeData);
+      } else {
+        console.warn("⚠️ LeetCode username not found or failed to fetch.");
+      }
+    }
 
-Respond **strictly** in JSON format with no extra text or commentary.
-Example:
-[
-  {
-    "id": 1,
-    "title": "Frontend Developer Intern",
-    "company": "TechCorp",
-    "location": "Bangalore, India",
-    "type": "Hybrid",
-    "duration": "3 months",
-    "description": "Work with React and TailwindCSS to build UI components.",
-    "requiredSkills": ["React", "JavaScript", "CSS"],
-    "matchScore": 92,
-    "link": "https://techcorp.com/careers/frontend-intern"
+    // 🧠 Automatically enrich skills based on LeetCode performance
+if (leetcodeData && leetcodeData.problemsSolved) {
+  const totalSolved = leetcodeData.problemsSolved.reduce(
+    (sum, p) => sum + p.count,
+    0
+  );
+
+  console.log(`📊 Total LeetCode problems solved: ${totalSolved}`);
+
+  if (totalSolved > 150) {
+    console.log("💡 Adding advanced DSA-related skills...");
+    // Add more relevant skills to the user's skillset before AI prompt
+    skills += ", Data Structures, Algorithms, Problem Solving";
+  } else if (totalSolved > 50) {
+    console.log("💡 Adding intermediate coding-related skills...");
+    skills += ", Logic Building, Coding Fundamentals";
   }
-]
+}
+
+
+    /* ======================================================
+       🧠 Construct Smart AI Prompt
+       ====================================================== */
+    const leetcodeSection = leetcodeData
+      ? `
+LeetCode Verified Data:
+Username: ${leetcodeData.username}
+Ranking: ${leetcodeData.ranking}
+Reputation: ${leetcodeData.reputation}
+Problems Solved:
+${leetcodeData.problemsSolved.map((x) => `  - ${x.difficulty}: ${x.count}`).join("\n")}
+`
+      : "LeetCode data: Not provided";
+
+    const prompt = `
+You are an AI career advisor.
+Analyze this user's verified profile and recommend internships that best fit their coding and professional background.
+
+Profile:
+Education: ${education}
+Skills: ${skills}
+Interests: ${interests}
+Preferred Location: ${location}
+${leetcodeSection}
+
+Requirements:
+1. Recommend the top 6 internship opportunities as a JSON array.
+2. Each internship must include:
+   - id
+   - title
+   - company
+   - location
+   - type (On-site / Remote / Hybrid)
+   - duration (e.g. 3 months)
+   - description (2–3 lines)
+   - requiredSkills
+   - matchScore (0–100)
+   - link (valid company or career site URL)
+3. Respond strictly in valid JSON format — no extra text or explanation.
 `;
 
-    // 🔹 Call Gemini API
+    /* ======================================================
+       🔹 Call Gemini API
+       ====================================================== */
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
       { contents: [{ parts: [{ text: prompt }] }] },
@@ -86,7 +201,9 @@ Example:
       ];
     }
 
-    // ✅ Normalize all internship objects with flexible key handling
+    /* ======================================================
+       🔹 Normalize internship data
+       ====================================================== */
     internships = internships.slice(0, 6).map((item, index) => {
       const normalized = Object.fromEntries(
         Object.entries(item).map(([key, value]) => [
@@ -117,14 +234,14 @@ Example:
     console.log("✅ Final normalized internships:", internships);
     res.json({ internships });
   } catch (error) {
-    console.error(
-      "❌ Error fetching Gemini data:",
-      error.response?.data || error.message
-    );
+    console.error("❌ Error fetching Gemini data:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to fetch internships" });
   }
 });
 
+/* ======================================================
+   🚀 Start the server
+   ====================================================== */
 app.listen(PORT, () =>
   console.log(`✅ Server running on http://localhost:${PORT}`)
 );
