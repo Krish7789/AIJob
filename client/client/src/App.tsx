@@ -7,15 +7,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
-import SignIn from "./pages/SignIn";
-import Dashboard from "./pages/Dashboard"; // ✅ new dashboard page
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const [scrollToProfile, setScrollToProfile] = useState<(() => void) | null>(null);
   const [scrollToAbout, setScrollToAbout] = useState<(() => void) | null>(null);
-  const [goHome, setGoHome] = useState<(() => void) | null>(null);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -23,25 +20,16 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Navbar
-            onHomeClick={() => goHome?.()}
-            onInternshipsClick={() => scrollToProfile?.()}
-            onAboutClick={() => scrollToAbout?.()}
+          <Navbar 
+            onInternshipsClick={() => scrollToProfile?.()} 
+            onAboutClick={() => scrollToAbout?.()} 
           />
 
           <Routes>
-            <Route
-              path="/"
-              element={
-                <Index
-                  setScrollToProfile={setScrollToProfile}
-                  setScrollToAbout={setScrollToAbout}
-                  setGoHome={setGoHome}
-                />
-              }
+            <Route 
+              path="/" 
+              element={<Index setScrollToProfile={setScrollToProfile} setScrollToAbout={setScrollToAbout} />} 
             />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/dashboard" element={<Dashboard />} /> {/* ✅ New route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

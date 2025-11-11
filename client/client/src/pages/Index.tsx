@@ -19,19 +19,17 @@ interface ProfileData {
 interface IndexProps {
   setScrollToProfile: (fn: () => void) => void;
   setScrollToAbout: (fn: () => void) => void;
-  setGoHome?: (fn: () => void) => void; // ✅ new prop
 }
 
 // ✅ Single Team Member
-const teamMembers = [{ name: "Krish Kumar", role: "Software Developer" }];
+const teamMembers = [
+  { name: "Krish Kumar", role: "Software Developer" },
+];
 
-const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) => {
-
+const Index = ({ setScrollToProfile, setScrollToAbout }: IndexProps) => {
   const [currentStep, setCurrentStep] = useState<Step>("hero");
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [internships, setInternships] = useState<Internship[]>([]);
-  const [loading, setLoading] = useState(false);
-
   const aboutRef = useRef<HTMLDivElement>(null);
 
   const handleGetStarted = () => {
@@ -44,42 +42,32 @@ const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) 
   };
 
   useEffect(() => {
-  // ✅ Register scroll functions for Navbar
-  setScrollToProfile(() => () => setCurrentStep("results"));
-  setScrollToAbout(() => handleScrollToAbout);
-
-  // ✅ Register goHome function
-  setGoHome?.(() => () => {
-    setCurrentStep("hero");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-}, []);
-
+    setScrollToProfile(() => handleGetStarted);
+    setScrollToAbout(() => handleScrollToAbout);
+  }, []);
 
   const handleProfileSubmit = async (data: ProfileData) => {
     setProfileData(data);
-    setLoading(true); // show spinner
     window.scrollTo({ top: 0, behavior: "smooth" });
     toast.success("Profile saved! Now generating recommendations...");
 
     try {
+      toast.loading("Analyzing your profile...");
       const recommendations = await fetchInternshipRecommendations(data);
 
       if (recommendations && recommendations.length > 0) {
         setInternships(recommendations);
         setCurrentStep("results");
+        toast.dismiss();
         toast.success("Top internship matches generated!");
       } else {
-        toast.error(
-          "No suitable internships found. Try refining your profile."
-        );
+        toast.dismiss();
+        toast.error("No suitable internships found. Try refining your profile.");
       }
     } catch (err) {
+      toast.dismiss();
       toast.error("Failed to get recommendations from Gemini API.");
       console.error("Gemini fetch error:", err);
-    } finally {
-      setLoading(false); // hide spinner
-      toast.dismiss();
     }
   };
 
@@ -118,35 +106,14 @@ const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) 
       {/* Resume Upload */}
       {currentStep === "resume" && (
         <div className="container mx-auto px-4 py-16 max-w-2xl">
-          <ResumeUpload
-            onUpload={handleResumeUpload}
-            onSkip={handleSkipResume}
-          />
-        </div>
-      )}
-      {/* Spinner Overlay */}
-      {loading && (
-        <div className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-800 bg-opacity-90 backdrop-blur-md z-50">
-          {/* Glowing animated orb */}
-          <div className="relative flex items-center justify-center">
-            <div className="absolute w-32 h-32 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 animate-pulse blur-2xl opacity-40"></div>
-            <div className="w-16 h-16 border-[6px] border-transparent border-t-purple-500 border-l-blue-500 rounded-full animate-spin"></div>
-          </div>
-
-          {/* Text animation */}
-          <p className="mt-8 text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 animate-pulse tracking-wide">
-            Finding your perfect internships...
-          </p>
+          <ResumeUpload onUpload={handleResumeUpload} onSkip={handleSkipResume} />
         </div>
       )}
 
       {/* Internship Recommendations */}
       {currentStep === "results" && (
         <div className="container mx-auto px-4 py-16">
-          <RecommendationsList
-            internships={internships}
-            onReset={handleReset}
-          />
+          <RecommendationsList internships={internships} onReset={handleReset} />
         </div>
       )}
 
