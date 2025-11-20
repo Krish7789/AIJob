@@ -1,6 +1,4 @@
-// ========================================
 //  AI POWERED CAREER GUIDANCE BACKEND
-// ========================================
 
 const express = require("express");
 const cors = require("cors");
@@ -17,9 +15,8 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const RESUME_API_KEY = process.env.RESUME_API_KEY;
 const MODEL = "gemini-2.5-flash";
 
-// -----------------------------
 // CORS (Production + Localhost)
-// -----------------------------
+
 app.use(
   cors({
     origin: [
@@ -34,14 +31,13 @@ app.use(
 
 app.use(express.json());
 
-// -----------------------------
+
 // File Upload (Memory Storage)
-// -----------------------------
+
 const upload = multer({ storage: multer.memoryStorage() });
 
-/* ======================================================
-    FETCH LEETCODE STATS
-====================================================== */
+//FETCH LEETCODE STATS
+
 async function fetchLeetCodeStats(username) {
   const query = `
     query getUserProfile($username: String!) {
@@ -80,9 +76,9 @@ async function fetchLeetCodeStats(username) {
   }
 }
 
-/* ======================================================
-    GET: LEETCODE STATS
-====================================================== */
+
+//  GET: LEETCODE STATS
+
 app.get("/api/leetcode", async (req, res) => {
   const username = req.query.username;
   if (!username)
@@ -96,9 +92,9 @@ app.get("/api/leetcode", async (req, res) => {
   res.json(stats);
 });
 
-/* ======================================================
-    INTERNSHIP GENERATOR (STRICT JSON)
-====================================================== */
+
+//  INTERNSHIP GENERATOR (STRICT JSON)
+
 app.post("/api/internships", async (req, res) => {
   try {
     let { education, skills, interests, location, leetcodeUsername } =
@@ -184,9 +180,8 @@ NO markdown, NO explanation, ONLY JSON.
   }
 });
 
-/* ======================================================
-    RESUME ANALYZER ( PDF → TEXT → STRICT JSON )
-====================================================== */
+
+//    RESUME ANALYZER ( PDF → TEXT → STRICT JSON )
 app.post("/api/analyze-resume", upload.single("resume"), async (req, res) => {
   try {
     if (!req.file)
@@ -196,21 +191,23 @@ app.post("/api/analyze-resume", upload.single("resume"), async (req, res) => {
     const resumeText = pdfData.text;
 
     const prompt = `
-Analyze this resume and return STRICT JSON ONLY.
+Analyze this resume and return ONLY VALID JSON with this structure:
 
 {
-  "atsScore": 0,
-  "strengths": [],
-  "weaknesses": [],
-  "missingKeywords": [],
+  "atsScore": number,
+  "skills": [],
   "suggestions": []
 }
 
-Resume Content:
-${resumeText}
+Requirements:
+- STRICT JSON ONLY
+- NO markdown formatting
+- NO explanation text
+- NO backticks
 
-NO markdown, NO commentary, ONLY VALID JSON.
-    `;
+Resume:
+${resumeText}
+`;
 
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
@@ -224,14 +221,35 @@ NO markdown, NO commentary, ONLY VALID JSON.
     let raw =
       response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
+    // Remove ```json or ``` if included
     raw = raw.replace(/```json|```/g, "").trim();
 
-    let parsed;
+    let parsed = {};
     try {
       parsed = JSON.parse(raw);
     } catch {
-      return res.json({ error: "AI returned invalid JSON", raw });
+      return res.json({
+        error: "AI returned invalid JSON",
+        raw,
+      });
     }
+
+    // Safe normalization
+    parsed.atsScore = Number(parsed.atsScore) || 0;
+
+    parsed.skills = Array.isArray(parsed.skills)
+      ? parsed.skills
+      : String(parsed.skills || "")
+          .split(/[,;\n]+/)
+          .map((x) => x.trim())
+          .filter(Boolean);
+
+    parsed.suggestions = Array.isArray(parsed.suggestions)
+      ? parsed.suggestions
+      : String(parsed.suggestions || "")
+          .split(/[\n•-]+/)
+          .map((x) => x.trim())
+          .filter(Boolean);
 
     res.json(parsed);
   } catch (err) {
@@ -239,10 +257,8 @@ NO markdown, NO commentary, ONLY VALID JSON.
     res.status(500).json({ error: "Resume analysis failed" });
   }
 });
+//    START SERVER
 
-/* ======================================================
-    START SERVER
-====================================================== */
 app.listen(PORT, () =>
   console.log(`🚀 Server running on http://localhost:${PORT}`)
 );

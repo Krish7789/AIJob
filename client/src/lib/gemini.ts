@@ -1,4 +1,4 @@
-const MODEL = "models/gemini-2.5-flash"; // Stable version under your key
+const MODEL = "models/gemini-2.5-flash"; 
 
 export async function fetchInternshipRecommendations(profile: {
   education: string;
@@ -35,7 +35,7 @@ export async function fetchInternshipRecommendations(profile: {
       duration: item.duration || "3 months",
       description: item.description || "No description available.",
 
-      // ✅ FIXED: Pass requiredSkills properly
+      
       requiredSkills:
         Array.isArray(item.requiredSkills)
           ? item.requiredSkills

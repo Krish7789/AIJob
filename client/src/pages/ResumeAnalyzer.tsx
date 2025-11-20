@@ -24,9 +24,9 @@ export default function ResumeAnalyzer() {
   const [uploading, setUploading] = useState(false);
   const [analysis, setAnalysis] = useState<any>(null);
 
-  /* -------------------------------
+  /* 
         Upload Handler
-  --------------------------------*/
+  */
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploaded = e.target.files?.[0];
     if (!uploaded) return;
@@ -44,9 +44,9 @@ export default function ResumeAnalyzer() {
     }, 1000);
   };
 
-  /* -------------------------------
+  /* 
        Analyze Resume Handler
-  --------------------------------*/
+*/
   const handleAnalyze = async () => {
     if (!file) {
       toast.error("Please upload a resume first.");
@@ -121,9 +121,9 @@ export default function ResumeAnalyzer() {
           {loading ? "Analyzing..." : "Analyze Resume"}
         </Button>
 
-        {/* ========================================
+        {/*
               RESULTS AREA (Appears after analysis)
-        ======================================== */}
+     */}
         {analysis && (
           <div className="mt-10 space-y-12">
 
