@@ -81,11 +81,15 @@ export default function Navbar({
       {/* ✅ Navigation Links */}
       <div className="hidden md:flex gap-8 text-gray-200 font-medium">
         <button onClick={onHomeClick} className="hover:text-cyan-400 transition">
-          Home
+          <Link to="/">
+          Home</Link>
         </button>
         <button onClick={onAboutClick} className="hover:text-cyan-400 transition">
           About
         </button>
+        <Link to="/resume-analyzer" className="hover:text-cyan-400 transition">
+  Resume Analyzer
+</Link>
         <button
           onClick={onInternshipsClick}
           className="hover:text-cyan-400 transition"

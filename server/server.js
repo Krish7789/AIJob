@@ -1,43 +1,48 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import axios from "axios";
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const axios = require("axios");
+const multer = require("multer");
+const pdfParse = require("pdf-parse");
 
 dotenv.config();
 const app = express();
+
 app.use(
   cors({
     origin: [
-      "https://getjobji.vercel.app", // deployed frontend
-      "http://localhost:5173",       // local dev frontend
+      "https://getjobji.vercel.app",
+      "http://localhost:5173",
+      "http://localhost:8080",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:8080",
     ],
     methods: ["GET", "POST"],
     credentials: true,
   })
 );
+
 app.use(express.json());
+
+// File upload handler for resume
+const upload = multer({ storage: multer.memoryStorage() });
 
 const PORT = 5000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const RESUME_API_KEY = process.env.RESUME_API_KEY;
 const MODEL = "gemini-2.5-flash";
 
 /* ======================================================
-   🔹 UTILITY: Fetch LeetCode Stats via GraphQL
-   ====================================================== */
+    FETCH LEETCODE STATS
+====================================================== */
 async function fetchLeetCodeStats(username) {
   const query = `
     query getUserProfile($username: String!) {
       matchedUser(username: $username) {
         username
-        profile {
-          ranking
-          reputation
-        }
+        profile { ranking reputation }
         submitStatsGlobal {
-          acSubmissionNum {
-            difficulty
-            count
-          }
+          acSubmissionNum { difficulty count }
         }
       }
     }`;
@@ -56,201 +61,163 @@ async function fetchLeetCodeStats(username) {
       username: user.username,
       ranking: user.profile?.ranking ?? "N/A",
       reputation: user.profile?.reputation ?? "N/A",
-      problemsSolved: (user.submitStatsGlobal?.acSubmissionNum || []).map((x) => ({
-        difficulty: x.difficulty,
-        count: x.count,
-      })),
+      problemsSolved:
+        user.submitStatsGlobal?.acSubmissionNum?.map((x) => ({
+          difficulty: x.difficulty,
+          count: x.count,
+        })) || [],
     };
   } catch (err) {
-    console.error("⚠️ LeetCode data fetch failed:", err.message);
+    console.error("⚠️ LeetCode fetch error:", err.message);
     return null;
   }
 }
 
 /* ======================================================
-   🔹 GET: Fetch LeetCode Stats (for 'Fetch Stats' button)
-   ====================================================== */
+    GET: LEETCODE STATS
+====================================================== */
 app.get("/api/leetcode", async (req, res) => {
   const username = req.query.username;
-
-  if (!username) {
+  if (!username)
     return res.status(400).json({ error: "Username is required" });
-  }
-
-  console.log(`📡 Fetching LeetCode data for ${username}...`);
 
   const stats = await fetchLeetCodeStats(username);
-  if (!stats) {
-    return res.status(404).json({ error: "LeetCode user not found or failed to fetch." });
-  }
 
-  console.log("✅ LeetCode stats fetched successfully:", stats);
+  if (!stats)
+    return res.status(404).json({ error: "User not found on LeetCode" });
+
   res.json(stats);
 });
 
 /* ======================================================
-   🔹 POST: Internship Recommendations (AI + LeetCode)
-   ====================================================== */
+    INTERNSHIP GENERATOR (GEMINI + LEETCODE)
+====================================================== */
 app.post("/api/internships", async (req, res) => {
   try {
-    console.log("✅ Request received at /api/internships");
-    console.log("📝 Request body:", JSON.stringify(req.body, null, 2));
-
     let { education, skills, interests, location, leetcodeUsername } = req.body;
 
-    // 🟩 Optional: Fetch verified LeetCode stats if provided
     let leetcodeData = null;
+
     if (leetcodeUsername) {
-      console.log(`📡 Fetching LeetCode data for ${leetcodeUsername}...`);
       leetcodeData = await fetchLeetCodeStats(leetcodeUsername);
+
       if (leetcodeData) {
-        console.log("✅ LeetCode data fetched:", leetcodeData);
-      } else {
-        console.warn("⚠️ LeetCode username not found or failed to fetch.");
+        const totalSolved = leetcodeData.problemsSolved.reduce(
+          (sum, p) => sum + p.count,
+          0
+        );
+
+        if (totalSolved > 150) {
+          skills += ", Data Structures, Algorithms, Problem Solving";
+        } else if (totalSolved > 50) {
+          skills += ", Logic Building, Coding Fundamentals";
+        }
       }
     }
 
-    // 🧠 Automatically enrich skills based on LeetCode performance
-if (leetcodeData && leetcodeData.problemsSolved) {
-  const totalSolved = leetcodeData.problemsSolved.reduce(
-    (sum, p) => sum + p.count,
-    0
-  );
-
-  console.log(`📊 Total LeetCode problems solved: ${totalSolved}`);
-
-  if (totalSolved > 150) {
-    console.log("💡 Adding advanced DSA-related skills...");
-    // Add more relevant skills to the user's skillset before AI prompt
-    skills += ", Data Structures, Algorithms, Problem Solving";
-  } else if (totalSolved > 50) {
-    console.log("💡 Adding intermediate coding-related skills...");
-    skills += ", Logic Building, Coding Fundamentals";
-  }
-}
-
-
-    /* ======================================================
-       🧠 Construct Smart AI Prompt
-       ====================================================== */
-    const leetcodeSection = leetcodeData
-      ? `
-LeetCode Verified Data:
-Username: ${leetcodeData.username}
-Ranking: ${leetcodeData.ranking}
-Reputation: ${leetcodeData.reputation}
-Problems Solved:
-${leetcodeData.problemsSolved.map((x) => `  - ${x.difficulty}: ${x.count}`).join("\n")}
-`
-      : "LeetCode data: Not provided";
-
     const prompt = `
-You are an AI career advisor.
-Analyze this user's verified profile and recommend internships that best fit their coding and professional background.
-
-Profile:
+User profile:
 Education: ${education}
 Skills: ${skills}
 Interests: ${interests}
-Preferred Location: ${location}
-${leetcodeSection}
+Location: ${location}
 
-Requirements:
-1. Recommend the top 6 internship opportunities as a JSON array.
-2. Each internship must include:
-   - id
-   - title
-   - company
-   - location
-   - type (On-site / Remote / Hybrid)
-   - duration (e.g. 3 months)
-   - description (2–3 lines)
-   - requiredSkills
-   - matchScore (0–100)
-   - link (valid company or career site URL)
-3. Respond strictly in valid JSON format — no extra text or explanation.
+LeetCode Stats:
+${leetcodeData ? JSON.stringify(leetcodeData, null, 2) : "None"}
+
+Return a valid JSON array of exactly 6 internships.
 `;
 
-    /* ======================================================
-       🔹 Call Gemini API
-       ====================================================== */
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
       { contents: [{ parts: [{ text: prompt }] }] },
-      {
-        headers: { "Content-Type": "application/json" },
-        params: { key: GEMINI_API_KEY },
-      }
+      { headers: { "Content-Type": "application/json" }, params: { key: GEMINI_API_KEY } }
     );
 
-    let text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    console.log("🧾 Gemini raw output:", text);
+    let rawText =
+      response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    // 🧹 Clean and safely parse JSON
-    text = text.replace(/```json|```/g, "").trim();
+    rawText = rawText.replace(/```json|```/g, "").trim();
 
     let internships = [];
     try {
-      internships = JSON.parse(text);
-    } catch (err) {
-      console.warn("⚠️ Gemini output was not pure JSON — using fallback.");
-      internships = [
-        {
-          id: 0,
-          title: "Gemini Output (Unstructured)",
-          company: "N/A",
-          location: "N/A",
-          type: "N/A",
-          duration: "N/A",
-          description: text,
-          requiredSkills: [],
-          matchScore: 0,
-          link: "https://internshala.com/internships",
-        },
-      ];
+      internships = JSON.parse(rawText);
+    } catch {
+      internships = [{ id: 0, title: "Invalid JSON", description: rawText }];
     }
 
-    /* ======================================================
-       🔹 Normalize internship data
-       ====================================================== */
-    internships = internships.slice(0, 6).map((item, index) => {
-      const normalized = Object.fromEntries(
-        Object.entries(item).map(([key, value]) => [
-          key.toLowerCase().replace(/\s+/g, ""),
-          value,
-        ])
-      );
-
-      return {
-        id: normalized.id || index + 1,
-        title: normalized.title || "Untitled Internship",
-        company: normalized.company || "Unknown Company",
-        location: normalized.location || "Not specified",
-        type: normalized.type || "N/A",
-        duration: normalized.duration || "N/A",
-        description: normalized.description || "No description available.",
-        requiredSkills:
-          normalized.requiredskills ||
-          normalized.skills ||
-          normalized.skillsrequired ||
-          normalized.required_skills ||
-          [],
-        matchScore: normalized.matchscore || 0,
-        link: normalized.link || "https://internshala.com/internships",
-      };
-    });
-
-    console.log("✅ Final normalized internships:", internships);
     res.json({ internships });
-  } catch (error) {
-    console.error("❌ Error fetching Gemini data:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to fetch internships" });
+  } catch (err) {
+    console.error("Internship API error:", err);
+    res.status(500).json({ error: "Internship generation failed" });
   }
 });
 
 /* ======================================================
-   🚀 Start the server
-   ====================================================== */
+    RESUME ANALYZER (PDF → TEXT → GEMINI)
+====================================================== */
+app.post("/api/analyze-resume", upload.single("resume"), async (req, res) => {
+  try {
+    if (!req.file)
+      return res.status(400).json({ error: "No resume uploaded" });
+
+    const pdfData = await pdfParse(req.file.buffer);
+    const resumeText = pdfData.text;
+
+    const prompt = `
+Analyze this resume and return ONLY JSON with:
+{
+  "atsScore": number,
+  "skills": [],
+  "suggestions": []
+}
+
+Resume:
+${resumeText}
+`;
+
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+      { contents: [{ parts: [{ text: prompt }] }] },
+      { headers: { "Content-Type": "application/json" }, params: { key: RESUME_API_KEY } }
+    );
+
+    let raw = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    raw = raw.replace(/```json|```/g, "").trim();
+
+    let parsed = {};
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return res.json({ error: "AI returned invalid JSON", raw });
+    }
+
+    // Safe normalization
+    parsed.atsScore = Number(parsed.atsScore) || 0;
+    parsed.skills = Array.isArray(parsed.skills)
+      ? parsed.skills
+      : String(parsed.skills || "")
+          .split(/[,;\n]+/)
+          .map((x) => x.trim())
+          .filter(Boolean);
+
+    parsed.suggestions = Array.isArray(parsed.suggestions)
+      ? parsed.suggestions
+      : String(parsed.suggestions || "")
+          .split(/[\n•-]+/)
+          .map((x) => x.trim())
+          .filter(Boolean);
+
+    res.json(parsed);
+  } catch (err) {
+    console.error("Resume Analysis ERROR:", err);
+    res.status(500).json({ error: "Resume analysis failed" });
+  }
+});
+
+/* ======================================================
+    START SERVER
+====================================================== */
 app.listen(PORT, () =>
-  console.log(`✅ Server running on http://localhost:${PORT}`)
+  console.log(`🚀 Server running on http://localhost:${PORT}`)
 );

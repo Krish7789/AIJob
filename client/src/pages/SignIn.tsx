@@ -10,7 +10,7 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Save user to Firestore
+  
   const saveUserToFirestore = async (user: any) => {
     try {
       const userRef = doc(db, "users", user.uid);

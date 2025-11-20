@@ -4,15 +4,19 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
 import SignIn from "./pages/SignIn";
 import Dashboard from "./pages/Dashboard";
+import ResumeAnalyzer from "./pages/ResumeAnalyzer";
 
 const queryClient = new QueryClient();
 
-// ✅ Hook to detect PWA install prompt
+// --------------------------------------------
+// ✅ Custom Hook for PWA Install Prompt
+// --------------------------------------------
 const usePWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [canInstall, setCanInstall] = useState(false);
@@ -26,10 +30,9 @@ const usePWAInstallPrompt = () => {
   const promptInstall = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
+      await deferredPrompt.userChoice;
       setDeferredPrompt(null);
       setCanInstall(false);
-      return choice;
     }
   };
 
@@ -37,13 +40,11 @@ const usePWAInstallPrompt = () => {
 };
 
 const App = () => {
-  const [scrollToProfile, setScrollToProfile] = useState<(() => void) | null>(
-    null
-  );
+  const [scrollToProfile, setScrollToProfile] = useState<(() => void) | null>(null);
   const [scrollToAbout, setScrollToAbout] = useState<(() => void) | null>(null);
   const [goHome, setGoHome] = useState<(() => void) | null>(null);
 
-  // ✅ Enable install prompt in Navbar
+  // PWA support
   const { canInstall, promptInstall } = usePWAInstallPrompt();
 
   return (
@@ -71,8 +72,13 @@ const App = () => {
                 />
               }
             />
+
             <Route path="/signin" element={<SignIn />} />
             <Route path="/dashboard" element={<Dashboard />} />
+
+            {/* ⭐ NEW ROUTE — Resume Analyzer */}
+            <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
