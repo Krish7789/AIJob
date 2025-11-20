@@ -9,7 +9,7 @@ export async function fetchInternshipRecommendations(profile: {
   try {
     console.log("📤 Sending profile data to backend:", profile);
 
-    const response = await fetch("https://aijob-aqmj.onrender.com/api/internships", {
+    const response = await fetch(import.meta.env.VITE_BACKEND_URL+"/api/internships", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(profile),

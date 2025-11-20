@@ -1,3 +1,7 @@
+// ========================================
+//  AI POWERED CAREER GUIDANCE BACKEND
+// ========================================
+
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -8,14 +12,20 @@ const pdfParse = require("pdf-parse");
 dotenv.config();
 const app = express();
 
+const PORT = process.env.PORT || 5000;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const RESUME_API_KEY = process.env.RESUME_API_KEY;
+const MODEL = "gemini-2.5-flash";
+
+// -----------------------------
+// CORS (Production + Localhost)
+// -----------------------------
 app.use(
   cors({
     origin: [
       "https://getjobji.vercel.app",
       "http://localhost:5173",
-      "http://localhost:8080",
-      "http://127.0.0.1:5173",
-      "http://127.0.0.1:8080",
+      "http://127.0.0.1:5173"
     ],
     methods: ["GET", "POST"],
     credentials: true,
@@ -24,13 +34,10 @@ app.use(
 
 app.use(express.json());
 
-// File upload handler for resume
+// -----------------------------
+// File Upload (Memory Storage)
+// -----------------------------
 const upload = multer({ storage: multer.memoryStorage() });
-
-const PORT = 5000;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const RESUME_API_KEY = process.env.RESUME_API_KEY;
-const MODEL = "gemini-2.5-flash";
 
 /* ======================================================
     FETCH LEETCODE STATS
@@ -90,11 +97,12 @@ app.get("/api/leetcode", async (req, res) => {
 });
 
 /* ======================================================
-    INTERNSHIP GENERATOR (GEMINI + LEETCODE)
+    INTERNSHIP GENERATOR (STRICT JSON)
 ====================================================== */
 app.post("/api/internships", async (req, res) => {
   try {
-    let { education, skills, interests, location, leetcodeUsername } = req.body;
+    let { education, skills, interests, location, leetcodeUsername } =
+      req.body;
 
     let leetcodeData = null;
 
@@ -116,22 +124,42 @@ app.post("/api/internships", async (req, res) => {
     }
 
     const prompt = `
-User profile:
+You are an AI that generates internship recommendations.
+
+Generate EXACTLY 6 internships based on this profile:
 Education: ${education}
 Skills: ${skills}
 Interests: ${interests}
-Location: ${location}
+Location Preference: ${location}
 
-LeetCode Stats:
+LeetCode Data:
 ${leetcodeData ? JSON.stringify(leetcodeData, null, 2) : "None"}
 
-Return a valid JSON array of exactly 6 internships.
-`;
+IMPORTANT:
+Return ONLY a VALID JSON array.
+Each internship MUST follow this structure:
+
+[
+  {
+    "title": "",
+    "company": "",
+    "location": "",
+    "duration": "",
+    "description": "",
+    "requiredSkills": ["", "", ""]
+  }
+]
+
+NO markdown, NO explanation, ONLY JSON.
+    `;
 
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
       { contents: [{ parts: [{ text: prompt }] }] },
-      { headers: { "Content-Type": "application/json" }, params: { key: GEMINI_API_KEY } }
+      {
+        headers: { "Content-Type": "application/json" },
+        params: { key: GEMINI_API_KEY },
+      }
     );
 
     let rawText =
@@ -139,11 +167,14 @@ Return a valid JSON array of exactly 6 internships.
 
     rawText = rawText.replace(/```json|```/g, "").trim();
 
-    let internships = [];
+    let internships;
     try {
       internships = JSON.parse(rawText);
     } catch {
-      internships = [{ id: 0, title: "Invalid JSON", description: rawText }];
+      return res.status(500).json({
+        error: "AI returned invalid JSON",
+        raw: rawText,
+      });
     }
 
     res.json({ internships });
@@ -154,7 +185,7 @@ Return a valid JSON array of exactly 6 internships.
 });
 
 /* ======================================================
-    RESUME ANALYZER (PDF → TEXT → GEMINI)
+    RESUME ANALYZER ( PDF → TEXT → STRICT JSON )
 ====================================================== */
 app.post("/api/analyze-resume", upload.single("resume"), async (req, res) => {
   try {
@@ -165,48 +196,42 @@ app.post("/api/analyze-resume", upload.single("resume"), async (req, res) => {
     const resumeText = pdfData.text;
 
     const prompt = `
-Analyze this resume and return ONLY JSON with:
+Analyze this resume and return STRICT JSON ONLY.
+
 {
-  "atsScore": number,
-  "skills": [],
+  "atsScore": 0,
+  "strengths": [],
+  "weaknesses": [],
+  "missingKeywords": [],
   "suggestions": []
 }
 
-Resume:
+Resume Content:
 ${resumeText}
-`;
+
+NO markdown, NO commentary, ONLY VALID JSON.
+    `;
 
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
       { contents: [{ parts: [{ text: prompt }] }] },
-      { headers: { "Content-Type": "application/json" }, params: { key: RESUME_API_KEY } }
+      {
+        headers: { "Content-Type": "application/json" },
+        params: { key: RESUME_API_KEY },
+      }
     );
 
-    let raw = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    let raw =
+      response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
     raw = raw.replace(/```json|```/g, "").trim();
 
-    let parsed = {};
+    let parsed;
     try {
       parsed = JSON.parse(raw);
     } catch {
       return res.json({ error: "AI returned invalid JSON", raw });
     }
-
-    // Safe normalization
-    parsed.atsScore = Number(parsed.atsScore) || 0;
-    parsed.skills = Array.isArray(parsed.skills)
-      ? parsed.skills
-      : String(parsed.skills || "")
-          .split(/[,;\n]+/)
-          .map((x) => x.trim())
-          .filter(Boolean);
-
-    parsed.suggestions = Array.isArray(parsed.suggestions)
-      ? parsed.suggestions
-      : String(parsed.suggestions || "")
-          .split(/[\n•-]+/)
-          .map((x) => x.trim())
-          .filter(Boolean);
 
     res.json(parsed);
   } catch (err) {
