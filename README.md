@@ -82,7 +82,6 @@ Resume Analyzer panel
 
 🏗 System Architecture
 
-(Include the diagram I will generate below)
 
 Flow
 
@@ -100,7 +99,7 @@ Gemini returns structured JSON
 
 Frontend displays ATS Gauge / Recommendations
 
-🎨 Architecture Diagram (Include this in Google Drive)
+🎨 Architecture Diagram 
 User
   ↓
 React Frontend (Vercel)
