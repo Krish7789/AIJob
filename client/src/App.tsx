@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import Contact from "./pages/Contact";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
@@ -80,6 +80,7 @@ const App = () => {
 
             <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
             <Route path="/interview" element={<InterviewSimulator />} />
+            <Route path="/contact" element={<Contact />} />
 
 
             <Route path="*" element={<NotFound />} />

@@ -74,14 +74,20 @@ export default function Navbar({
       </Link>
 
       <div className="hidden md:flex gap-8 text-gray-200 font-medium">
-        <button onClick={onHomeClick} className="hover:text-cyan-400 transition">
+        <button
+          onClick={onHomeClick}
+          className="hover:text-cyan-400 transition"
+        >
           <Link to="/">Home</Link>
         </button>
-
-        <button onClick={onAboutClick} className="hover:text-cyan-400 transition">
-          About
+        <button
+          onClick={() => {
+            navigate("/", { state: { scrollTo: "internships" } });
+          }}
+          className="hover:text-cyan-400 transition"
+        >
+          Internships
         </button>
-
         <Link to="/resume-analyzer" className="hover:text-cyan-400 transition">
           Resume Analyzer
         </Link>
@@ -91,10 +97,12 @@ export default function Navbar({
         </Link>
 
         <button
-          onClick={onInternshipsClick}
+          onClick={() => {
+            navigate("/", { state: { scrollTo: "about" } });
+          }}
           className="hover:text-cyan-400 transition"
         >
-          Internships
+          About
         </button>
 
         <Link to="/contact" className="hover:text-cyan-400 transition">
@@ -119,9 +127,11 @@ export default function Navbar({
               className="cursor-pointer w-10 h-10 flex items-center justify-center text-lg font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-md hover:scale-105 transition-transform"
               title={user.displayName || user.email}
             >
-              {(user.displayName?.charAt(0) ||
+              {(
+                user.displayName?.charAt(0) ||
                 user.email?.charAt(0) ||
-                "?").toUpperCase()}
+                "?"
+              ).toUpperCase()}
             </div>
 
             <AnimatePresence>

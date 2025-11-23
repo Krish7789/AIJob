@@ -6,6 +6,7 @@ import { RecommendationsList } from "@/components/RecommendationsList";
 import { Internship } from "@/components/InternshipCard";
 import { fetchInternshipRecommendations } from "../lib/gemini";
 import { toast } from "react-hot-toast";
+import { useLocation } from "react-router-dom";
 
 type Step = "hero" | "profile" | "resume" | "results";
 
@@ -19,19 +20,23 @@ interface ProfileData {
 interface IndexProps {
   setScrollToProfile: (fn: () => void) => void;
   setScrollToAbout: (fn: () => void) => void;
-  setGoHome?: (fn: () => void) => void; // ✅ new prop
+  setGoHome?: (fn: () => void) => void;
 }
 
-// ✅ Single Team Member
 const teamMembers = [{ name: "Krish Kumar", role: "Software Developer" }];
 
-const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) => {
+const Index = ({
+  setScrollToProfile,
+  setScrollToAbout,
+  setGoHome,
+}: IndexProps) => {
   const [currentStep, setCurrentStep] = useState<Step>("hero");
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [internships, setInternships] = useState<Internship[]>([]);
   const [loading, setLoading] = useState(false);
 
   const aboutRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
 
   const handleGetStarted = () => {
     setCurrentStep("profile");
@@ -43,16 +48,33 @@ const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) 
   };
 
   useEffect(() => {
-    // ✅ Register scroll functions for Navbar
-    setScrollToProfile(() => () => setCurrentStep("results"));
-    setScrollToAbout(() => handleScrollToAbout);
+    setScrollToProfile(() => () => {
+      setCurrentStep("profile");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
 
-    // ✅ Register goHome function
+    setScrollToAbout(() => handleScrollToAbout);
     setGoHome?.(() => () => {
       setCurrentStep("hero");
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
   }, []);
+
+  useEffect(() => {
+    if (!location.state) return;
+
+    if (location.state.scrollTo === "internships") {
+      setCurrentStep("profile");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    if (location.state.scrollTo === "about") {
+      setCurrentStep("hero"); // ensure hero is showing
+      setTimeout(() => {
+        aboutRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 300);
+    }
+  }, [location.state]);
 
   const handleProfileSubmit = async (data: ProfileData) => {
     setProfileData(data);
@@ -68,11 +90,12 @@ const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) 
         setCurrentStep("results");
         toast.success("Top internship matches generated!");
       } else {
-        toast.error("No suitable internships found. Try refining your profile.");
+        toast.error(
+          "No suitable internships found. Try refining your profile."
+        );
       }
     } catch (err) {
       toast.error("Failed to get recommendations from Gemini API.");
-      console.error("Gemini fetch error:", err);
     } finally {
       setLoading(false);
       toast.dismiss();
@@ -80,7 +103,6 @@ const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) 
   };
 
   const handleResumeUpload = (file: File) => {
-    console.log("Resume uploaded:", file.name);
     setCurrentStep("results");
     window.scrollTo({ top: 0, behavior: "smooth" });
     toast.success("Analyzing your resume and generating recommendations...");
@@ -101,24 +123,23 @@ const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) 
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
       {currentStep === "hero" && <Hero onGetStarted={handleGetStarted} />}
 
-      {/* Profile Form */}
       {currentStep === "profile" && (
         <div className="container mx-auto px-4 py-16 max-w-2xl">
           <ProfileForm onSubmit={handleProfileSubmit} />
         </div>
       )}
 
-      {/* Resume Upload */}
       {currentStep === "resume" && (
         <div className="container mx-auto px-4 py-16 max-w-2xl">
-          <ResumeUpload onUpload={handleResumeUpload} onSkip={handleSkipResume} />
+          <ResumeUpload
+            onUpload={handleResumeUpload}
+            onSkip={handleSkipResume}
+          />
         </div>
       )}
 
-      {/* Spinner Overlay */}
       {loading && (
         <div className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-800 bg-opacity-90 backdrop-blur-md z-50">
           <div className="relative flex items-center justify-center">
@@ -131,14 +152,15 @@ const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) 
         </div>
       )}
 
-      {/* Internship Recommendations */}
       {currentStep === "results" && (
-        <div className="container mx-auto px-4 py-16">
-          <RecommendationsList internships={internships} onReset={handleReset} />
+        <div id="internship-section" className="container mx-auto px-4 py-16">
+          <RecommendationsList
+            internships={internships}
+            onReset={handleReset}
+          />
         </div>
       )}
 
-      {/* 🌟 About Us Section */}
       <div ref={aboutRef} className="container mx-auto px-4 py-20">
         <div className="relative max-w-5xl mx-auto bg-white/95 shadow-2xl rounded-3xl p-12 backdrop-blur-lg border border-gray-200">
           <h2 className="text-5xl font-extrabold text-center mb-6 text-secondary-glow tracking-tight">
@@ -150,12 +172,10 @@ const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) 
             <span className="font-bold text-primary">
               AI-Powered Internship Recommendation System
             </span>{" "}
-            — an intelligent platform helping students find their ideal internships based on skills,
-            education, and interests. Our mission is to simplify career guidance through innovative AI
-            and seamless user experiences.
+            — an intelligent platform helping students find their ideal
+            internships based on skills, education, and interests.
           </p>
 
-          {/* 👥 Team Members Grid (Centered for single member) */}
           <div className="flex justify-center items-center min-h-[20vh]">
             <div className="grid grid-cols-1 gap-8 justify-items-center">
               {teamMembers.map((member, idx) => (
@@ -163,7 +183,6 @@ const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) 
                   key={idx}
                   className="bg-gradient-to-br from-primary/10 to-secondary/10 backdrop-blur-md p-8 rounded-2xl text-center border border-primary/20 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col items-center w-72"
                 >
-                  {/* Avatar */}
                   <div className="mb-4 flex items-center justify-center">
                     <span className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-secondary-glow text-white text-2xl font-bold shadow">
                       {member.name
@@ -173,11 +192,12 @@ const Index = ({ setScrollToProfile, setScrollToAbout, setGoHome }: IndexProps) 
                     </span>
                   </div>
 
-                  {/* Name & Role */}
                   <div className="text-xl font-semibold text-secondary-glow mb-1 tracking-wide">
                     {member.name}
                   </div>
-                  <div className="text-sm text-gray-600 font-medium">{member.role}</div>
+                  <div className="text-sm text-gray-600 font-medium">
+                    {member.role}
+                  </div>
                 </div>
               ))}
             </div>
