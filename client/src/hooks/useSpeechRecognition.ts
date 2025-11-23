@@ -20,32 +20,41 @@ export function useSpeechRecognition(
       return;
     }
 
-    const recognition = new SpeechRecognitionCtor();
+    const recognition: SpeechRecognitionType = new SpeechRecognitionCtor();
     recognition.lang = "en-US";
-    recognition.continuous = true; // keep recording even if silent
-    recognition.interimResults = true;
+    recognition.continuous = true; // keep recording even in silence
+    recognition.interimResults = true; // capture interim text
+
+    finalTranscriptRef.current = "";
 
     recognition.onstart = () => {
-      finalTranscriptRef.current = "";
       setListening(true);
+      finalTranscriptRef.current = "";
     };
 
     recognition.onresult = (event: any) => {
-      let finalChunk = "";
+      let interim = "";
+      let finalText = "";
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalChunk += event.results[i][0].transcript;
+        const result = event.results[i];
+
+        if (result.isFinal) {
+          finalText += result[0].transcript;
+        } else {
+          interim += result[0].transcript;
         }
       }
 
-      if (finalChunk.trim()) {
-        finalTranscriptRef.current += finalChunk.trim() + " ";
+      // Store final recognized chunks
+      if (finalText.trim()) {
+        finalTranscriptRef.current += finalText.trim() + " ";
       }
     };
 
     recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error);
+      console.error("Speech Recognition Error:", event.error);
+      setListening(false);
     };
 
     recognitionRef.current = recognition;
@@ -64,9 +73,9 @@ export function useSpeechRecognition(
     recognitionRef.current?.stop();
     setListening(false);
 
-    const text = finalTranscriptRef.current.trim();
-    if (text.length > 0) {
-      onFinalResult(text);
+    const final = finalTranscriptRef.current.trim();
+    if (final.length > 0) {
+      onFinalResult(final);   // <-- sends answer to backend
     }
   };
 
