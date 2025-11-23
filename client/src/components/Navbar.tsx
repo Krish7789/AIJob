@@ -10,8 +10,8 @@ interface NavbarProps {
   onHomeClick?: () => void;
   onInternshipsClick?: () => void;
   onAboutClick?: () => void;
-  canInstall?: boolean; // ✅ For install button visibility
-  onInstallClick?: () => void; // ✅ For triggering PWA install
+  canInstall?: boolean;
+  onInstallClick?: () => void;
 }
 
 export default function Navbar({
@@ -26,7 +26,6 @@ export default function Navbar({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // ✅ Detect authentication state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -34,7 +33,6 @@ export default function Navbar({
     return () => unsubscribe();
   }, []);
 
-  // ✅ Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -48,21 +46,18 @@ export default function Navbar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ Logout
   const handleLogout = async () => {
     try {
       await signOut(auth);
       toast.success("Logged out successfully!");
       navigate("/signin");
     } catch (err) {
-      console.error("Logout Error:", err);
       toast.error("Logout failed.");
     }
   };
 
   return (
     <nav className="flex justify-between items-center px-8 py-4 bg-[#0f172a]/80 backdrop-blur-md shadow-md fixed w-full top-0 left-0 z-50 border-b border-cyan-500/20">
-      {/* ✅ Logo + Name */}
       <Link
         to="/"
         className="flex items-center gap-3 cursor-pointer transition-transform hover:scale-105"
@@ -78,32 +73,36 @@ export default function Navbar({
         </span>
       </Link>
 
-      {/* ✅ Navigation Links */}
       <div className="hidden md:flex gap-8 text-gray-200 font-medium">
         <button onClick={onHomeClick} className="hover:text-cyan-400 transition">
-          <Link to="/">
-          Home</Link>
+          <Link to="/">Home</Link>
         </button>
+
         <button onClick={onAboutClick} className="hover:text-cyan-400 transition">
           About
         </button>
+
         <Link to="/resume-analyzer" className="hover:text-cyan-400 transition">
-  Resume Analyzer
-</Link>
+          Resume Analyzer
+        </Link>
+
+        <Link to="/interview" className="hover:text-cyan-400 transition">
+          AI Interview
+        </Link>
+
         <button
           onClick={onInternshipsClick}
           className="hover:text-cyan-400 transition"
         >
           Internships
         </button>
+
         <Link to="/contact" className="hover:text-cyan-400 transition">
           Contact
         </Link>
       </div>
 
-      {/* ✅ Right Section */}
       <div ref={dropdownRef} className="relative flex items-center gap-3">
-        {/* ✅ Optional Install Button */}
         {canInstall && (
           <button
             onClick={onInstallClick}
@@ -122,11 +121,9 @@ export default function Navbar({
             >
               {(user.displayName?.charAt(0) ||
                 user.email?.charAt(0) ||
-                "?"
-              ).toUpperCase()}
+                "?").toUpperCase()}
             </div>
 
-            {/* Dropdown */}
             <AnimatePresence>
               {dropdownOpen && (
                 <motion.div

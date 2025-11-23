@@ -11,12 +11,14 @@ import Navbar from "./components/Navbar";
 import SignIn from "./pages/SignIn";
 import Dashboard from "./pages/Dashboard";
 import ResumeAnalyzer from "./pages/ResumeAnalyzer";
+import InterviewSimulator from "./pages/InterviewSimulator";
+
 
 const queryClient = new QueryClient();
 
-// --------------------------------------------
-// ✅ Custom Hook for PWA Install Prompt
-// --------------------------------------------
+
+// Custom Hook for PWA Install Prompt
+
 const usePWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [canInstall, setCanInstall] = useState(false);
@@ -76,8 +78,9 @@ const App = () => {
             <Route path="/signin" element={<SignIn />} />
             <Route path="/dashboard" element={<Dashboard />} />
 
-            {/* ⭐ NEW ROUTE — Resume Analyzer */}
             <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
+            <Route path="/interview" element={<InterviewSimulator />} />
+
 
             <Route path="*" element={<NotFound />} />
           </Routes>
