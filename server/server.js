@@ -6,8 +6,7 @@ const axios = require("axios");
 const multer = require("multer");
 const pdfParse = require("pdf-parse");
 const interviewRoutes = require("./routes/interviewRoutes")
-
-
+const companyRoutes = require("./routes/comapanyRoutes");
 const app = express();
 
 const PORT = process.env.PORT || 5000;
@@ -33,6 +32,7 @@ app.use(
 
 app.use(express.json());
 app.use("/api", interviewRoutes);
+app.use("/api", companyRoutes);
 
 
 // File Upload (Memory Storage)

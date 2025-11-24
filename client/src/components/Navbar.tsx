@@ -95,6 +95,9 @@ export default function Navbar({
         <Link to="/interview" className="hover:text-cyan-400 transition">
           AI Interview
         </Link>
+        <Link to="/company-prep" className="hover:text-cyan-400 transition">
+        Company Prep
+        </Link>
 
         <button
           onClick={() => {

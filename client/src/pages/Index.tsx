@@ -173,7 +173,10 @@ const Index = ({
               AI-Powered Internship Recommendation System
             </span>{" "}
             — an intelligent platform helping students find their ideal
-            internships based on skills, education, and interests.
+            internships based on skills, education, and interests. By using AI-driven recommendations,
+             ATS-based resume analysis, and voice-based interview simulation, we simplify
+             the entire career guidance smarter, more accessible, and personalized
+              for evry student
           </p>
 
           <div className="flex justify-center items-center min-h-[20vh]">
