@@ -25,8 +25,7 @@ export default function CompanyPrep() {
     setLoading(true);
 
     try {
-      const res = await fetch(
-        import.meta.env.VITE_BACKEND_URL + "/api/company-pack",
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/company-pack`, 
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
