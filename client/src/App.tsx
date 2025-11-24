@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import ResumeAnalyzer from "./pages/ResumeAnalyzer";
 import InterviewSimulator from "./pages/InterviewSimulator";
 import CompanyPrep from "./pages/companyPrep";
+import CodingPractice from "./pages/CodingPractice";
 
 
 const queryClient = new QueryClient();
@@ -82,6 +83,8 @@ const App = () => {
             <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
             <Route path="/interview" element={<InterviewSimulator />} />
             <Route path="/company-prep" element={<CompanyPrep />} />
+            <Route path="/coding-practice" element={<CodingPractice />} />
+
 
             <Route path="/contact" element={<Contact />} />
 

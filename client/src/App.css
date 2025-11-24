@@ -40,3 +40,11 @@
 .read-the-docs {
   color: #888;
 }
+.monaco-editor, .monaco-editor * {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+.monaco-editor {
+  pointer-events: auto !important;
+}

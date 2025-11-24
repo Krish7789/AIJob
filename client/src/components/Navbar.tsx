@@ -98,6 +98,10 @@ export default function Navbar({
         <Link to="/company-prep" className="hover:text-cyan-400 transition">
         Company Prep
         </Link>
+        <Link to="/coding-practice" className="hover:text-cyan-400 transition">
+  Coding Practice
+</Link>
+
 
         <button
           onClick={() => {
