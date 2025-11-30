@@ -73,59 +73,52 @@ export default function Navbar({
         </span>
       </Link>
 
-      <div className="hidden md:flex gap-8 text-gray-200 font-medium">
-        <button
-          onClick={onHomeClick}
-          className="hover:text-cyan-400 transition"
-        >
-          <Link to="/">Home</Link>
-        </button>
-        <button
-          onClick={() => {
-            navigate("/", { state: { scrollTo: "internships" } });
-          }}
-          className="hover:text-cyan-400 transition"
-        >
-          Internships
-        </button>
-        <Link to="/resume-analyzer" className="hover:text-cyan-400 transition">
-          Resume Analyzer
-        </Link>
+      <div className="hidden md:flex gap-8 text-gray-200 font-medium flex-grow justify-center">
+  <button onClick={onHomeClick} className="hover:text-cyan-400 transition">
+    <Link to="/">Home</Link>
+  </button>
 
-        <Link to="/interview" className="hover:text-cyan-400 transition">
-          AI Interview
-        </Link>
-        <Link to="/company-prep" className="hover:text-cyan-400 transition">
-        Company Prep
-        </Link>
-        <Link to="/coding-practice" className="hover:text-cyan-400 transition">
-  Coding Practice
-</Link>
+  <button
+    onClick={() => {
+      navigate("/", { state: { scrollTo: "internships" } });
+    }}
+    className="hover:text-cyan-400 transition"
+  >
+    Internships
+  </button>
 
+  <Link to="/resume-analyzer" className="hover:text-cyan-400 transition">
+    Resume Analyzer
+  </Link>
 
-        <button
-          onClick={() => {
-            navigate("/", { state: { scrollTo: "about" } });
-          }}
-          className="hover:text-cyan-400 transition"
-        >
-          About
-        </button>
+  <Link to="/interview" className="hover:text-cyan-400 transition">
+    AI Interview
+  </Link>
 
-        <Link to="/contact" className="hover:text-cyan-400 transition">
-          Contact
-        </Link>
-      </div>
+  <Link to="/company-prep" className="hover:text-cyan-400 transition">
+    Company Prep
+  </Link>
+
+  <Link to="/coding-practice" className="hover:text-cyan-400 transition">
+    Coding Practice
+  </Link>
+
+  <button
+    onClick={() => {
+      navigate("/", { state: { scrollTo: "about" } });
+    }}
+    className="hover:text-cyan-400 transition"
+  >
+    About
+  </button>
+
+  <Link to="/contact" className="hover:text-cyan-400 transition">
+    Contact
+  </Link>
+</div>
 
       <div ref={dropdownRef} className="relative flex items-center gap-3">
-        {canInstall && (
-          <button
-            onClick={onInstallClick}
-            className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform"
-          >
-            Install App
-          </button>
-        )}
+       
 
         {user ? (
           <>
