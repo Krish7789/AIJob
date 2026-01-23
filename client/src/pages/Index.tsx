@@ -23,7 +23,7 @@ interface IndexProps {
   setGoHome?: (fn: () => void) => void;
 }
 
-const teamMembers = [{ name: "Krish Kumar", role: "Software Developer" }];
+const teamMembers = [{ name: "Pratyakshi Chauhan", role: "Software Developer" }];
 
 const Index = ({
   setScrollToProfile,
