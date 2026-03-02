@@ -101,3 +101,7 @@ All colors MUST be HSL.
 .monaco-editor {
   pointer-events: auto !important;
 }
+
+html, body {
+  background: #0f172a;
+}

@@ -8,7 +8,11 @@ const pdfParse = require("pdf-parse");
 const interviewRoutes = require("./routes/interviewRoutes")
 const companyRoutes = require("./routes/comapanyRoutes");
 const codingRoutes =  require("./routes/codingRoutes")
+const roadmapRoutes = require("./routes/roadmapRoutes");
+const courseRoutes = require("./routes/courseRoutes");
+
 const app = express();
+
 
 const PORT = process.env.PORT || 5000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -35,6 +39,9 @@ app.use(express.json());
 app.use("/api", interviewRoutes);
 app.use("/api", companyRoutes);
 app.use("/api", codingRoutes);
+app.use("/api", roadmapRoutes);
+app.use("/api", courseRoutes);
+
 
 
 
@@ -227,7 +234,6 @@ ${resumeText}
     let raw =
       response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    // Remove ```json or ``` if included
     raw = raw.replace(/```json|```/g, "").trim();
 
     let parsed = {};

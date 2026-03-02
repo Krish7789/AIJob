@@ -14,6 +14,9 @@ import ResumeAnalyzer from "./pages/ResumeAnalyzer";
 import InterviewSimulator from "./pages/InterviewSimulator";
 import CompanyPrep from "./pages/companyPrep";
 import CodingPractice from "./pages/CodingPractice";
+import RoadmapPage from "./features/knowledgeHub/pages/RoadmapPage";
+import CourseHub from "@/pages/CourseHub";
+
 
 
 const queryClient = new QueryClient();
@@ -79,11 +82,12 @@ const App = () => {
 
             <Route path="/signin" element={<SignIn />} />
             <Route path="/dashboard" element={<Dashboard />} />
-
-            <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
+            <Route path="/analyze-resume" element={<ResumeAnalyzer/>} />
             <Route path="/interview" element={<InterviewSimulator />} />
             <Route path="/company-prep" element={<CompanyPrep />} />
             <Route path="/coding-practice" element={<CodingPractice />} />
+            <Route path="/knowledge-hub/roadmap" element={<RoadmapPage />} />
+            <Route path="/courses" element={<CourseHub />} />
 
 
             <Route path="/contact" element={<Contact />} />
