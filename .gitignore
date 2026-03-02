@@ -25,6 +25,6 @@ pnpm-debug.log*
 # Temporary files
 *.log
 *.tmp
-
+#more to go
 # OS files
 Thumbs.db
