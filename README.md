@@ -1,159 +1,111 @@
-AI-Powered Career Guidance System
+# 🚀 AI-Powered Adaptive Learning Hub
 
-A full-stack platform that provides personalized job/internship recommendations, resume analysis, ATS scoring, and career suggestions using Google Gemini 2.5 Flash.
+An intelligent AI platform engineered to personalize learning and accelerate career growth based on each student’s skills, timeline, and goals.
 
-🚀 Tech Stack
-Frontend
+🌐 Live Demo: https://getjobji.vercel.app/
 
-React + Vite
+---
 
-TypeScript
+## 🧠 About The Project
 
-Tailwind CSS
+AI-Powered Adaptive Learning Hub is a full-stack AI-driven platform designed to help students and job seekers:
 
-Custom ATS Gauge (SVG + Animation)
+- Build structured career roadmaps
+- Match with relevant internships
+- Practice interviews with AI feedback
+- Improve coding skills
+- Get course recommendations
+- Prepare strategically for companies
+- Analyze resumes with ATS scoring
 
-Backend
+The platform adapts based on individual user profiles, ensuring personalized and goal-oriented learning paths.
 
-Node.js + Express
+---
 
-Multer (PDF upload)
+## ✨ Core Features
 
-pdf-parse (Resume text extraction)
+### 📚 Knowledge Hub
+Generate adaptive AI-driven roadmaps tailored to your:
+- Skills
+- Career goals
+- Timeline
 
-Google Gemini 2.5 Flash API
+Create structured learning paths for efficient growth.
 
-CORS enabled
+---
 
-Hosting
+### 🎯 AI Internship Matching
+Smart internship recommendations aligned with your:
+- Skillset
+- Interests
+- Career direction
 
-Frontend → Vercel
+---
 
-Backend → Render
+### 🎤 AI Mock Interviews
+Practice interviews with:
+- Instant AI evaluation
+- Feedback & improvement suggestions
+- Performance insights
 
-🧠 Core Features
-✅ 1. AI-Powered Internship Recommendations
+---
 
-User enters education, skills, interests, location.
+### 🛤 Personalized Skill Roadmaps
+Structured growth paths customized for:
+- Specific job roles
+- Career transitions
+- Target companies
 
-Backend sends contextual prompt to Gemini.
+---
 
-Returns curated internship recommendations.
+### 💻 Coding Practice
+Sharpen problem-solving skills through:
+- Guided practice
+- AI-assisted learning
+- Structured challenges
 
-Clean UI showing role, company, and skills match.
+---
 
-✅ 2. Resume Analyzer + ATS Score
+### 🏢 Company Preparation
+Strategically prepare for:
+- Specific companies
+- Target roles
+- Interview patterns
 
-Upload PDF resume.
+---
 
-Automatic text extraction.
+### 📄 Resume Analyzer
+Upload your resume and receive:
+- ATS Score
+- Improvement feedback
+- Optimization suggestions
 
-Gemini analyzes content based on real ATS patterns.
+---
 
-Returns:
+### 🎓 Course Recommendation
+Get curated course recommendations from across the internet tailored to your goals.
 
-ATS Score (0–100)
+---
 
-Strengths
+## 🛠 Tech Stack
 
-Weaknesses
+### Frontend
+- React / TypeScript
+- Tailwind CSS
+- Modern UI Components
 
-Missing keywords
+### Backend
+- Node.js
+- Express.js
 
-Professional improvement suggestions
+### Database
+- MongoDB
 
-Shown using a beautifully animated ATS Gauge.
+### AI Integration
+- AI-powered evaluation & roadmap generation
 
-✅ 3. Clean & Responsive UI
+### Deployment
+- Vercel (Frontend)
+- Render (Backend)
 
-Hero section
 
-Dashboard
-
-Internship cards
-
-Resume Analyzer panel
-
-✅ 4. Fully Modular API Layer
-
-/api/internships
-
-/api/analyze-resume
-
-🏗 System Architecture
-
-
-Flow
-
-User → Frontend inputs
-
-Frontend calls Render backend (VITE_BACKEND_URL)
-
-Backend routes:
-
-JSON request → Gemini (recommendations)
-
-PDF upload → pdf-parse → Gemini (resume analysis)
-
-Gemini returns structured JSON
-
-Frontend displays ATS Gauge / Recommendations
-
-🎨 Architecture Diagram 
-User
-  ↓
-React Frontend (Vercel)
-  ↓ fetch()
-Backend API (Render - Express)
-  ├── /api/internships        → Gemini prompt → JSON response
-  └── /api/analyze-resume     → PDF → pdf-parse → Gemini → ATS response
-  ↓
-Gemini 2.5 Flash Model
-
-⚙️ Setup & Run Instructions
-Backend
-cd server
-npm install
-npm start
-
-Frontend
-cd client
-npm install
-npm run dev
-
-🔑 .env.example
-GEMINI_API_KEY=
-VITE_BACKEND_URL=
-
-📌 API Endpoints
-POST /api/internships
-{
-  "education": "",
-  "skills": "",
-  "interests": "",
-  "location": ""
-}
-
-POST /api/analyze-resume
-
-Multipart Form Data → file: resume.pdf
-
-📈 Impact & Metrics
-
-Reduces resume errors by up to 40%
-
-ATS score prediction within realistic industry expectations
-
-Internship recommendations aligned with user skills
-
-Fast response time (200–400 ms after Render warmup)
-
-🛠 Limitations / What’s Next
-
-Add database for storing resume history
-
-Add user authentication
-
-Add job search from LinkedIn/Indeed APIs
-
-Add AI interview module
